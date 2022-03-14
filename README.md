@@ -32,4 +32,5 @@ Create docker image and run docker container
 docker-compose up
 ```
 
-If successfully created, aplication will be live on localhost, port 8000
+If successfully created, aplication will be live on localhost, port 8000.
+Swagger UI will be available on localhost:8000/docs
