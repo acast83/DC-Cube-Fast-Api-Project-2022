@@ -1,6 +1,10 @@
 ### DC FastApi Backend Project
 
-DC Fast Api Project is as part of a Digital Cube's technical interview.
+DC FastApi Project is as part of a Digital Cube's technical interview.
+Application is live on Heroku:
+https://digital-cube-fastapi.herokuapp.com/
+Swagger UI:
+https://digital-cube-fastapi.herokuapp.com/docs
 
 ---
 
@@ -20,7 +24,7 @@ cd project_folder
 
 Clone github repository
 ```
-git clone git@github.com:acast83/Aleksandar_Stojkovic-dc-march2022-.git
+git clone git@github.com:acast83/Aleksandar_Stojkovic-dc-march2022-.git .
 ```
 
 Create docker image and run docker container
