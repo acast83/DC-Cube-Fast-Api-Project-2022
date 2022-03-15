@@ -13,7 +13,7 @@ https://digital-cube-fastapi.herokuapp.com/docs
 ### Requirements
 docker engine, docker-compose, git
 
-### Installation using docker: 
+### Installation: 
 
 Create project folder and get inside the project folder
 
@@ -27,6 +27,7 @@ Clone github repository
 git clone git@github.com:acast83/Aleksandar_Stojkovic-dc-march2022-.git .
 ```
 
+### Run the application using docker
 Create docker image and run docker container
 ```
 docker-compose up
