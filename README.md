@@ -11,9 +11,9 @@ https://digital-cube-fastapi.herokuapp.com/docs
 ## Getting Started
 
 ### Requirements
-docker engine, docker-compose
+docker engine, docker-compose, git
 
-### Installation: 
+### Installation using docker: 
 
 Create project folder and get inside the project folder
 
