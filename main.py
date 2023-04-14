@@ -9,7 +9,7 @@ from models import CountryModel, CityModel, UserModel, session
 from user_pydantic_models import PyUser
 from validators import username_validator, password_validator,\
     country_set_validator, country_validator
-from logging_setup import logger
+from logging_setup import log
 import os
 from dotenv import load_dotenv
 
@@ -62,12 +62,12 @@ def create_new_user(user: PyUser):
 
                     session.add(new_user)
                     session.commit()
-                    logger.info(
+                    log.info(
                         f"New user created. Username {user.username_api}")
 
                 except Exception as exc:
                     session.rollback()
-                    logger.debug(f"Registration failed, error {exc}")
+                    log.debug(f"Registration failed, error {exc}")
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Registration failed, error {exc}")
@@ -80,17 +80,17 @@ def create_new_user(user: PyUser):
                     token = jwt.encode(user_dict, JWT_SECRET)
                     return {"access_token": token, "token_type": "bearer"}
             else:
-                logger.debug(
+                log.debug(
                     f"User with username '{user.username_api}' already exists")
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                     detail=f"User with username'{user.username_api}'already exists")
         else:
-            logger.debug(
+            log.debug(
                 f"Registration failed, password {user.password_api}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Password characters must be alphanumerical")
     else:
-        logger.debug(
+        log.debug(
             f"Registration failed, username {user.username_api}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="alphanumeric and special characters _ and - allowed")
@@ -122,23 +122,23 @@ def generate_token(form_data: OAuth2PasswordRequestForm = Depends()):
                     token = jwt.encode(user_dict, JWT_SECRET)
                     return {"access_token": token, "token_type": "bearer"}
                 else:
-                    logger.debug(
+                    log.debug(
                         f"User entered wrong password")
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail="Invalid credentials")
             else:
-                logger.debug(f"Error, user {form_data.username} doesn't exist")
+                log.debug(f"Error, user {form_data.username} doesn't exist")
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                     detail="Invalid credentials")
 
         else:
-            logger.debug("Unsupported password characters")
+            log.debug("Unsupported password characters")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Invalid credentials")
 
     else:
-        logger.debug(
+        log.debug(
             f"Invalid credentials, {form_data.username}")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Invalid credentials")
@@ -167,10 +167,10 @@ def list_of_countries(offset_val: int = Query(None, description="please enter of
             return dict_countries
 
         except Exception as exc:
-            logger.debug("Error", exc)
+            log.debug("Error", exc)
             return {"Error": exc}
     else:
-        logger.debug("User provides values that are not numeric")
+        log.debug("User provides values that are not numeric")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="limit and offset values must be numeric values")
 
@@ -193,7 +193,7 @@ def find_country_by_city_name(city: str = Query(None, description="Please enter 
         return {f"City name: {city}":
                 f"Country name: {city_data.parent.country_name}"}
     else:
-        logger.debug(f"Incorrect input values")
+        log.debug(f"Incorrect input values")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="only alphabetic characters allowed")
 
@@ -217,7 +217,7 @@ def list_of_cities(offset_val: int = Query(None, description="Please enter offse
             return dict_cities
 
         except Exception as exc:
-            logger.debug("Error", exc)
+            log.debug("Error", exc)
             return {"Error": exc}
     else:
         raise HTTPException(
@@ -246,7 +246,7 @@ def list_cities_by_population(min: int = Query(None,
                     f"Population: {city.population}"
             return city_dict
         except Exception as exc:
-            logger.debug(f"Error, {exc}")
+            log.debug(f"Error, {exc}")
             return {"Error": exc}
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Numerical values allowed")
