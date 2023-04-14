@@ -1,7 +1,6 @@
 /venv
 /__pycache__
-test.csv
-test.py
 project.log
+.env
 
 

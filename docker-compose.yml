@@ -4,7 +4,7 @@ services:
   api:
     build: ./
     image: dc_fastapi_project_image
-    command: uvicorn main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+    command: sh -c 'rm -f ./your_log_file.log && touch ./your_log_file.log; uvicorn main:app --reload --workers 1 --host 0.0.0.0 --port 8000'
     ports:
       - 8000:8000
     networks:

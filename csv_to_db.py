@@ -3,54 +3,57 @@ Python module used to import data from
 worldcities.csv file in a database
 """
 import pandas as pd
-from models import Country_Model, City_Model
-from models import session
+from models import CountryModel, CityModel
+from models import Session
+from sqlalchemy import func
 
-
-def country_entry(country_data):
+def add_country(country_name:str):
     """
     Function that creates a country orm object and
     stores the country data in a database table "countries"
     """
     try:
-        country_entry = Country_Model(
-            country_name=country_data
-        )
-        session.add(country_entry)
-        session.commit()
+        with Session() as session:
+            country = CountryModel(
+                country_name=country_name
+            )
+            session.add(country)
+            session.commit()
+            session.refresh(country)
+
+            return country
+
     except Exception as exc:
         print("Error, ", exc)
-    finally:
-        session.close()
 
 
-def find_country(country):
+def find_country(name):
     """
     Function that is used to find a country from a database
-    and store the data in a orm oject
+    and store the data in a orm boject
     """
-    country_search = session.query(Country_Model).filter(
-        Country_Model.country_name == country).first()
-    return country_search
+    country = Session().query(CountryModel).filter(
+        func.lower(CountryModel.country_name) == func.lower(name)).first()
+    return country
 
 
-def city_entry(city_data, country_id_data, lat_data, lng_data, population_data):
+def add_city(city_name, country_id, lat, lon, population):
     """
     Function that creates a city orm object and stores the city
     data in a database table "cities"
     """
     try:
-        city = City_Model(
-            city_ascii_name=city_data,
-            country_id=country_id_data,
-            lat=lat_data, lng=lng_data,
-            population=population_data)
-        session.add(city)
-        session.commit()
+        with Session() as session:
+            city = CityModel(
+                city_ascii_name=city_name,
+                country_id=country_id,
+                lat=lat, lng=lon,
+                population=population)
+            session.add(city)
+            session.commit()
     except Exception as exc:
         print("Error, ", exc)
-    finally:
-        session.close()
+
 
 
 def csv_to_db():
@@ -67,16 +70,16 @@ def csv_to_db():
         country_list = df['country'].values.tolist()
         population_list = df['population'].values.tolist()
 
-        for country_item, city_item, lat_item, lng_item, \
-            population_item in zip(country_list, cities_list,
+        for country_name, city_name, city_lat, city_lon, \
+            city_population in zip(country_list, cities_list,
                                    lat_list, lng_list, population_list):
-            country_search = find_country(country_item)
-            if country_search is None:
-                country_entry(country_item)
-                country_search = find_country(country_item)
+            country = find_country(country_name)
+            if not country:
+                country = add_country(country_name=country_name)
 
-            city_entry(city_item, country_search.id,
-                       lat_item, lng_item, population_item)
+            add_city(city_name=city_name, country_id=country.id,
+                       lat=city_lat, lon=city_lon, population=city_population)
+
 
     except Exception as exc:
         print("Error, ", exc)

@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 
 
-class UserSchema(BaseModel):
+class PyUser(BaseModel):
     """User schema class"""
     username_api: str
     password_api: str

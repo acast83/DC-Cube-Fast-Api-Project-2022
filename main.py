@@ -6,7 +6,7 @@ from haversine import haversine
 from passlib.hash import bcrypt
 import jwt
 from models import CountryModel, CityModel, UserModel, session
-from schemas import UserSchema
+from user_pydantic_models import PyUser
 from validators import username_validator, password_validator,\
     country_set_validator, country_validator
 from logging_setup import logger
@@ -28,11 +28,11 @@ def root():
     """
     Root endpoint function
     """
-    return ("Message", "Welcome")
+    return {"Message": "Welcome"}
 
 
 @app.post("/api/sign_up")
-def create_new_user(user: UserSchema):
+def create_new_user(user: PyUser):
     """
     Function used for registering new user.
     Input: allowed only alphanumeric characters
