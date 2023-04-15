@@ -1,5 +1,5 @@
 """Main module"""
-from fastapi import FastAPI, Query, status, HTTPException, Depends
+from fastapi import FastAPI, Query, status, HTTPException, Depends,Header
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -25,6 +25,9 @@ ALGORITHM = os.getenv("ALGORITHM")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 
 app = FastAPI()
+
+
+
 
 
 @app.get("/")
@@ -105,18 +108,38 @@ def login(user:PyUser,
     return {"access_token": token, "token_type": "bearer"}
 
 
-@app.get("/protected")
-async def protected_route(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def check_token(token:str, db):
     try:
+        print(token)
         decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
 
         db_user = db.query(User).filter_by(
             username=decoded_token["username"], password=decoded_token["password"]).one_or_none()
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
-        # return username
+
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+
+def get_database_dependency(db: Session = Depends(get_db)):
+    return db
+
+
+def get_token_dependency(authorization: str = Header(..., name="Authorization")):
+    token = authorization
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid token format")
+    return token
+
+def get_auth_dependencies(token: str = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
+    check_token(token=token, db=db)
+    return {"token": token, "db": db}
+
+@app.get("/protected")
+async def protected_route(auth: dict = Depends(get_auth_dependencies)):
+    db  = auth["db"]
     return {"success":"yeah"}
 #
 # @app.get("/api/list_countries/")
