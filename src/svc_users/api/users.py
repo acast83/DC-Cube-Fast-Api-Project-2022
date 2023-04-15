@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, HTTPException, Depends
+from fastapi import FastAPI, status, HTTPException, Depends, APIRouter
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
@@ -14,7 +14,6 @@ load_dotenv()
 from src.utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
-
 app = FastAPI()
 
 
@@ -26,7 +25,7 @@ def root():
     return {"service": "users"}
 
 
-@app.post("/users/sign_up")
+@app.post("/sign_up")
 def create_new_user(user: PyUser, db: Session = Depends(get_db)):
     """
     Function used for registering new user.
@@ -65,7 +64,7 @@ def create_new_user(user: PyUser, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 
-@app.post("/users/login")
+@app.post("/login")
 def login(user: PyUser, db: Session = Depends(get_db)):
     """
     Function used for user login.
