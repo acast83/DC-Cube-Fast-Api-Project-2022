@@ -129,16 +129,20 @@ def get_database_dependency(db: Session = Depends(get_db)):
 def get_token_dependency(token: str = Header(..., name="Authorization", alias="Authorization")):
     if not token:
         raise HTTPException(status_code=401, detail="Invalid token format")
-    return {"token": token}
+    return token
 
-def get_auth_dependencies(token_data: dict = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
-    token = token_data["token"]
+def get_auth_dependencies(token: str = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
+
     check_token(token=token, db=db)
-    return {"token": token, "db": db}
+    handler = type("Handler", (), {"token":token, "db":db})
+    # return {"token": token, "db": db}
+    return handler
+
 
 @app.get("/protected")
-async def protected_route(auth: dict = Depends(get_auth_dependencies)):
-    db  = auth["db"]
+async def protected_route(handler: object = Depends(get_auth_dependencies)):
+    # db  = auth["db"]
+    db = handler.db
     return {"success":"yeah"}
 #
 # @app.get("/api/list_countries/")
