@@ -1,7 +1,7 @@
 """Sqlalchemy Models"""
 
 from pathlib import Path
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey,Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -21,8 +21,7 @@ class CountryModel(Base):
     __tablename__ = "countries"
     id = Column(Integer, primary_key=True)
     country_name = Column(String(50), nullable=False)
-
-    children = relationship("CityModel", back_populates="parent")
+    __table_args__ = (Index('idx_country_id_name', id),)
 
 
 class CityModel(Base):
@@ -34,13 +33,13 @@ class CityModel(Base):
     lng = Column(Integer, nullable=False)
     population = Column(Integer, nullable=True)
     country_id = Column(Integer, ForeignKey('countries.id'))
+    country = relationship('CountryModel', backref='cities')
 
-    parent = relationship("CountryModel", back_populates="children")
 
 
 class UserModel(Base):
     """SQlalchemy model class used for table users"""
-    __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, )
     username = Column(String(50), nullable=False)
     hashed_password = Column(String(50), nullable=False)

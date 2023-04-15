@@ -12,7 +12,7 @@ from validators import username_validator, password_validator,\
 from logging_setup import log
 import os
 from dotenv import load_dotenv
-
+import uvicorn
 load_dotenv()
 
 
@@ -148,7 +148,7 @@ def generate_token(form_data: OAuth2PasswordRequestForm = Depends()):
 def list_of_countries(offset_val: int = Query(None, description="please enter offset value"),
                       limit_val: int = Query(None, description="Please enter limit value")):
     """
-    Function that provides user with json formated list of countries
+    api that provides user with json formated list of countries
     based on input limit and offset values.
     Input: limit and offset values used for pagination purpose
     Output: json formatted list of countries
@@ -436,7 +436,7 @@ def ls_cities(value_set,
     Task D
     Function calculates max and min city population number based on
     the input set of country name values.
-    Input: Function expects set of values, separated by a coma. 
+    Input: Function expects set of values, separated by a coma.
     Example input value: serbia,croatia.
     Query is case insensitive
     Output: Function returns a dictionary with city with lowest population
@@ -506,3 +506,24 @@ def ls_cities(value_set,
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Only alphabetic characters allowed,"
                             "separated by a ','")
+
+
+
+if __name__ == "__main__":
+
+    # print("aca")
+    # uvicorn.run("main:app", host="0.0.0.0", port=8001)
+    ...
+
+
+
+
+
+
+
+
+
+
+
+
+
