@@ -118,6 +118,8 @@ def check_token(token:str, db):
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
+        return {"id_user":db_user.id, "token":token}
+
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -133,16 +135,16 @@ def get_token_dependency(token: str = Header(..., name="Authorization", alias="A
 
 def get_auth_dependencies(token: str = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
 
-    check_token(token=token, db=db)
-    handler = type("Handler", (), {"token":token, "db":db})
+    auth_data = check_token(token=token, db=db)
+    handler = type("Handler", (), {"token":token, "db":db, "id_user":auth_data["id_user"]})
     # return {"token": token, "db": db}
     return handler
 
 
 @app.get("/protected")
 async def protected_route(handler: object = Depends(get_auth_dependencies)):
-    # db  = auth["db"]
     db = handler.db
+
     return {"success":"yeah"}
 #
 # @app.get("/api/list_countries/")
