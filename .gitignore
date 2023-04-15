@@ -3,4 +3,8 @@
 project.log
 .env
 .idea/
+__pycache__/
+dbs/
+logs/
+
 
