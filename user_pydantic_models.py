@@ -5,8 +5,8 @@ from pydantic import BaseModel
 
 class PyUser(BaseModel):
     """User schema class"""
-    username_api: str
-    password_api: str
+    username: str
+    password: str
 
     class Config:
         """Orm config class"""
