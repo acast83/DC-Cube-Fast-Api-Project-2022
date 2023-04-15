@@ -126,14 +126,13 @@ def check_token(token:str, db):
 def get_database_dependency(db: Session = Depends(get_db)):
     return db
 
-
-def get_token_dependency(authorization: str = Header(..., name="Authorization")):
-    token = authorization
+def get_token_dependency(token: str = Header(..., name="Authorization", alias="Authorization")):
     if not token:
         raise HTTPException(status_code=401, detail="Invalid token format")
-    return token
+    return {"token": token}
 
-def get_auth_dependencies(token: str = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
+def get_auth_dependencies(token_data: dict = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
+    token = token_data["token"]
     check_token(token=token, db=db)
     return {"token": token, "db": db}
 
