@@ -4,10 +4,11 @@ worldcities.csv file in a database
 """
 import pandas as pd
 from models import CountryModel, CityModel
-from models import Session
+from db_utils import Session
 from sqlalchemy import func
 
-def add_country(country_name:str):
+
+def add_country(name: str):
     """
     Function that creates a country orm object and
     stores the country data in a database table "countries"
@@ -15,7 +16,7 @@ def add_country(country_name:str):
     try:
         with Session() as session:
             country = CountryModel(
-                country_name=country_name
+                name=name
             )
             session.add(country)
             session.commit()
@@ -32,12 +33,13 @@ def find_country(name):
     Function that is used to find a country from a database
     and store the data in a orm boject
     """
-    country = Session().query(CountryModel).filter(
-        func.lower(CountryModel.country_name) == func.lower(name)).first()
+    with Session() as session:
+        country = session.query(CountryModel).filter(
+            func.lower(CountryModel.name) == func.lower(name)).first()
     return country
 
 
-def add_city(city_name, country_id, lat, lon, population):
+def add_city(name, country_id, lat, lon, population):
     """
     Function that creates a city orm object and stores the city
     data in a database table "cities"
@@ -45,7 +47,7 @@ def add_city(city_name, country_id, lat, lon, population):
     try:
         with Session() as session:
             city = CityModel(
-                city_ascii_name=city_name,
+                name=name,
                 country_id=country_id,
                 lat=lat, lng=lon,
                 population=population)
@@ -53,7 +55,6 @@ def add_city(city_name, country_id, lat, lon, population):
             session.commit()
     except Exception as exc:
         print("Error, ", exc)
-
 
 
 def csv_to_db():
@@ -71,14 +72,20 @@ def csv_to_db():
         population_list = df['population'].values.tolist()
 
         for country_name, city_name, city_lat, city_lon, \
-            city_population in zip(country_list, cities_list,
-                                   lat_list, lng_list, population_list):
+                city_population in zip(country_list, cities_list,
+                                       lat_list, lng_list, population_list):
             country = find_country(country_name)
             if not country:
-                country = add_country(country_name=country_name)
-
-            add_city(city_name=city_name, country_id=country.id,
-                       lat=city_lat, lon=city_lon, population=city_population)
+                try:
+                    country = add_country(name=country_name)
+                except Exception as e:
+                    raise
+            try:
+                add_city(name=city_name, country_id=country.id,
+                         lat=city_lat, lon=city_lon, population=city_population)
+            except Exception as e:
+                print(city_name, city_lat, city_lon, city_population)
+                raise
 
 
     except Exception as exc:
