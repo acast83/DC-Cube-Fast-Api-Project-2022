@@ -1,5 +1,5 @@
 """Main module"""
-from fastapi import FastAPI, Query, status, HTTPException, Depends,Header
+from fastapi import FastAPI, Query, status, HTTPException, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -9,25 +9,19 @@ import jwt
 from models import CountryModel, CityModel, User
 from db_utils import get_db
 from user_pydantic_models import PyUser
-from validators import username_validator, password_validator,\
+from validators import username_validator, password_validator, \
     country_set_validator, country_validator
 from logging_setup import log
 import os
 from dotenv import load_dotenv
 import uvicorn
+
 load_dotenv()
-
-
-JWT_SECRET = os.getenv("JWT_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-
+from api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 
 app = FastAPI()
-
-
-
 
 
 @app.get("/")
@@ -49,7 +43,7 @@ def create_new_user(user: PyUser, db: Session = Depends(get_db)):
 
     # search user table for existing username
     existing_user = db.query(User).filter_by(
-        username = user.username).one_or_none()
+        username=user.username).one_or_none()
 
     if existing_user:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
@@ -58,7 +52,7 @@ def create_new_user(user: PyUser, db: Session = Depends(get_db)):
     try:
         # create new user
         new_user = User(username=user.username,
-                             password=bcrypt.hash(user.password))
+                        password=bcrypt.hash(user.password))
         db.add(new_user)
         db.commit()
 
@@ -68,32 +62,29 @@ def create_new_user(user: PyUser, db: Session = Depends(get_db)):
         user_dict = {"username": new_user.username,
                      "password": new_user.password}
 
-        token = jwt.encode(user_dict, JWT_SECRET)
+        token = jwt.encode(user_dict, key=JWT_SECRET, algorithm=ALGORITHM)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ERROR_WHILE_CREATING_USER")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="ERROR_WHILE_CREATING_USER")
 
     return {"access_token": token, "token_type": "bearer"}
 
 
-
 @app.post("/api/users/login")
-def login(user:PyUser,
-        # form_data: OAuth2PasswordRequestForm = Depends(PyUser),
-
-          db: Session = Depends(get_db)):
+def login(user: PyUser, db: Session = Depends(get_db)):
     """
     Function used for user login.
     Input: user provides username and password
     Output: if user exists, function returns json with user's token
     """
 
-
     # find user based on input username value
     db_user = db.query(User).filter_by(
         username=user.username).one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="USER_NOT_FOUND")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="USER_NOT_FOUND")
 
     # Verify input password
     try:
@@ -104,48 +95,17 @@ def login(user:PyUser,
     # create a new user token
     user_dict = {"username": db_user.username,
                  "password": db_user.password}
-    token = jwt.encode(user_dict, JWT_SECRET)
+    token = jwt.encode(payload=user_dict, key=JWT_SECRET, algorithm=ALGORITHM)
     return {"access_token": token, "token_type": "bearer"}
-
-
-def check_token(token:str, db):
-    try:
-        print(token)
-        decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
-
-        db_user = db.query(User).filter_by(
-            username=decoded_token["username"], password=decoded_token["password"]).one_or_none()
-        if not db_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
-
-        return {"id_user":db_user.id, "token":token}
-
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
-
-def get_database_dependency(db: Session = Depends(get_db)):
-    return db
-
-def get_token_dependency(token: str = Header(..., name="Authorization", alias="Authorization")):
-    if not token:
-        raise HTTPException(status_code=401, detail="Invalid token format")
-    return token
-
-def get_auth_dependencies(token: str = Depends(get_token_dependency), db: Session = Depends(get_database_dependency)):
-
-    auth_data = check_token(token=token, db=db)
-    handler = type("Handler", (), {"token":token, "db":db, "id_user":auth_data["id_user"]})
-    # return {"token": token, "db": db}
-    return handler
 
 
 @app.get("/protected")
 async def protected_route(handler: object = Depends(get_auth_dependencies)):
     db = handler.db
 
-    return {"success":"yeah"}
+    return {"success": "yeah"}
+
+
 #
 # @app.get("/api/list_countries/")
 # def list_of_countries(offset_val: int = Query(None, description="please enter offset value"),
@@ -513,20 +473,5 @@ async def protected_route(handler: object = Depends(get_auth_dependencies)):
 
 
 if __name__ == "__main__":
-
-    # print("aca")
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
     ...
-
-
-
-
-
-
-
-
-
-
-
-
-
