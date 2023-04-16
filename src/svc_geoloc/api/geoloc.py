@@ -170,7 +170,6 @@ def nearest_and_farthest_cities(country_id,
     return {f"Country - {country.country_name}": result}
 
 
-#
 # @app.get("/api/three_nearest_cities")
 # def three_nearest_cities(country, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 #     """
