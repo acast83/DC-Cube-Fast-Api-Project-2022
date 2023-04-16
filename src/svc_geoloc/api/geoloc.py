@@ -1,16 +1,19 @@
 from fastapi import FastAPI, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy import between
 from src.svc_geoloc.utils.logging_setup import log
 from src.svc_geoloc.utils.db_utils import get_db
 from dotenv import load_dotenv
 import uvicorn
+from haversine import haversine
 
 load_dotenv()
 from src.utils.api_utils import get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 from src.svc_geoloc.models.geoloc import *
+from sqlalchemy import func
 
 app = FastAPI()
 
@@ -25,8 +28,8 @@ def root():
 
 @app.get("/countries")
 def get_all_countries(
-        offset_val: int = 0,
-        limit_val: int = 20,
+        offset: int = 0,
+        limit: int = 20,
         handler: object = Depends(get_auth_dependencies),
         db: Session = Depends(get_db)
 ):
@@ -38,154 +41,135 @@ def get_all_countries(
     """
 
     # create country query object based on limit and offset  values
-    try:
-        countries_list = db.query(DbCountry).offset(
-            offset_val).limit(limit_val).all()
-    except Exception as e:
-        raise
+    countries = db.query(DbCountry).offset(
+        offset).limit(limit).all()
+
     # create output list
     result = []
-    for country in countries_list:
+    for country in countries:
         result.append({"id": country.id, "name": country.name})
 
     return result
 
 
-#
-# @app.get("/api/find_country_by_city_name")
-# def find_country_by_city_name(city: str = Query(None, description="Please enter city name"), db: Session = Depends(get_db)):
-#     """
-#     Function returns country name based od city name input value
-#     Input: city name, allows only alphabetic characters
-#     Query is case insensitive
-#     Output: returns json formatted city and country data
-#     """
-#     if city.isalpha():
-#         city_data = db.query(CityModel).filter(
-#             func.lower(CityModel.city_ascii_name) ==
-#             func.lower(city)).first()
-#         if city_data is None:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND, detail="city not found")
-#         return {f"City name: {city}":
-#                     f"Country name: {city_data.parent.country_name}"}
-#     else:
-#         log.debug(f"Incorrect input values")
-#         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                             detail="only alphabetic characters allowed")
-#
-#
-# @app.get("/api/list_cities/")
-# def list_of_cities(offset_val: int = Query(None, description="Please enter offset value"),
-#                    limit_val: int = Query(None, description="Please enter limit value"), db: Session = Depends(get_db)):
-#     """
-#     Function provides user with json formated list of cities
-#     based on input limit and offset values.
-#     Input: limit and offset values used for pagination purposes
-#     Output: json formatted list of cities
-#     """
-#     if isinstance(offset_val, int) and isinstance(limit_val, int):
-#         try:
-#             cities_list = db.query(CityModel).offset(
-#                 offset_val).limit(limit_val)
-#             dict_cities = {}
-#             for city in cities_list:
-#                 dict_cities[city.id] = city.city_ascii_name
-#             return dict_cities
-#
-#         except Exception as exc:
-#             log.debug("Error", exc)
-#             return {"Error": exc}
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#             detail="Numerical values accepted")
-#
-#
-# @app.get("/api/list_cities_by_population/")
-# def list_cities_by_population(min: int = Query(None,
-#                                                description="Please enter minimum value"),
-#                               max: int = Query(None,
-#                                                description="Please enter maximum value"), db: Session = Depends(get_db)):
-#     """
-#     Function calculates and returns a dictionary with cities
-#     with population between min and max values.
-#     Input: min and max population
-#     Output: returns sa json formatted with city names and their population
-#     """
-#     if isinstance(min, int) and isinstance(max, int):
-#         try:
-#             search_cities = db.query(CityModel).filter(
-#                 CityModel.population > min).filter(CityModel.population < max)
-#             city_dict = {}
-#             for city in search_cities:
-#                 city_dict[f"City name: {city.city_ascii_name}"] = \
-#                     f"Population: {city.population}"
-#             return city_dict
-#         except Exception as exc:
-#             log.debug(f"Error, {exc}")
-#             return {"Error": exc}
-#     raise HTTPException(
-#         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Numerical values allowed")
-#
-#
-# @app.get("/api/nearest_and_farthest_cities")
-# def nearest_and_farthest_cities(country_id,
-#                                 token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     """
-#     Task A
-#     Function calculates min and max distances between two cities within a country,
-#     based on country id input.
-#     Input: function expects numerical id value for specific country.
-#     Example input: 88   (Serbia's id our database)
-#     Query is case insensitive
-#     Output: function returns a dictionary with country name,
-#     nearest and farthest cities, and their distances
-#     """
-#
-#     # input data validation
-#     if country_id.isdigit():
-#
-#         # find country by a specific id input
-#         country_obj = db.query(CountryModel).filter(
-#             CountryModel.id == country_id).first()
-#         if country_obj is None:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
-#
-#         else:
-#
-#             # create a dictionary with city pairs, and distances between them
-#             distances = {}
-#             counter = 1
-#             for city1 in country_obj.children[:-1:]:
-#                 for city2 in country_obj.children[counter::]:
-#                     distances[f"{city1.city_ascii_name}-{city2.city_ascii_name}"] \
-#                         = haversine(
-#                         (city1.lat, city1.lng), (city2.lat, city2.lng))
-#                 counter += 1
-#
-#             # calculate max and min distances
-#             max_distance = max(distances.values())
-#             min_distance = min(distances.values())
-#
-#             # iterate through distance dict max values list, find key value,
-#             # and append result dictionary
-#             result = {f"max distance - {k}": f"{v} km" for k,
-#             v in distances.items() if v == max_distance}
-#             # iterate through distance dict min values list, find key value,
-#
-#             # and append result dictionary
-#             for key, value in distances.items():
-#                 if value == min_distance:
-#                     result[f"min distance - {key}"] = f"{value} km"
-#
-#             # final output
-#             return {f"Country - {country_obj.country_name}": result}
-#     else:
-#         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                             detail="Only numeric value allowed")
-#
+@app.get("/country_by_city_name/{city_name}")
+def find_country_by_city_name(city_name: str,
+                              db: Session = Depends(get_db),
+                              handler: object = Depends(get_auth_dependencies),
+                              ):
+    """
+    Function returns country name based od city name input value
+    Input: city name, allows only alphabetic characters
+    Query is case insensitive
+    Output: returns json formatted city and country data
+    """
+
+    cities = db.query(DbCity).filter(
+        func.lower(DbCity.name) == city_name.lower()
+    ).all()
+
+    result = []
+    for city in cities:
+        result.append({'id': city.id, 'city_name': city.name, 'country_name': city.country.name})
+    return result
+
+
+@app.get("/cities")
+def get_cities(offset: int = 0,
+               limit: int = 50,
+               db: Session = Depends(get_db),
+               handler: object = Depends(get_auth_dependencies),
+               ):
+    """
+    Function provides user with list of cities
+    based on input limit and offset values.
+    Input: limit and offset values used for pagination purposes
+    Output: json formatted list of cities
+    """
+
+    cities = db.query(DbCity).offset(
+        offset).limit(limit).all()
+
+    # create output list
+    result = []
+    for city in cities:
+        result.append({"id": city.id, "name": city.name})
+
+    return result
+
+
+@app.get("/cities_by_population/min/{min}/max/{max}")
+def list_cities_by_population(min: int,
+                              max: int,
+                              limit: int = 50,
+                              db: Session = Depends(get_db),
+                              handler: object = Depends(get_auth_dependencies),
+                              ):
+    """
+    Function calculates and returns a dictionary with cities
+    with population between min and max values.
+    Input: min and max population
+    Output: returns sa json formatted with city names and their population
+    """
+
+    cities = db.query(DbCity).filter(
+        between(DbCity.population, min, max)
+    ).all()
+    result = []
+    for city in cities:
+        result.append({"id": city.id, "name": city.name, "population": city.population})
+
+    return {"meta": {"limit": limit},
+            "cities": result
+            }
+
+
+@app.get("/nearest_and_farthest_cities/{country_id}")
+def nearest_and_farthest_cities(country_id,
+                                handler: object = Depends(get_auth_dependencies),
+                                db: Session = Depends(get_db)):
+    """
+    Task A
+    Function calculates min and max distances between two cities within a country,
+    based on country id input.
+    Input: function expects numerical id value for specific country.
+    Example input: 88   (Serbia's id our database)
+    Output: function returns a dictionary with country name,
+    nearest and farthest cities, and their distances
+    """
+
+    # find country by a specific id input
+    country = db.query(DbCountry).filter(
+        DbCountry.id == country_id).first()
+    if not country:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="COUNTRY_NOT_FOUND")
+    # create a dictionary with city pairs, and distances between them
+    distances = {}
+    counter = 1
+    for city1 in country.cities[:-1:]:
+        for city2 in country.cities[counter::]:
+            distances[f"{city1.name}-{city2.name}"] = haversine((city1.lat, city1.lng), (city2.lat, city2.lng))
+        counter += 1
+
+    # calculate max and min distances
+    max_distance = max(distances.values())
+    min_distance = min(distances.values())
+
+    # iterate through distance dict max values list, find key value,
+    # and append result dictionary
+    result = {f"max distance - {k}": f"{v} km" for k,
+    v in distances.items() if v == max_distance}
+    # iterate through distance dict min values list, find key value,
+
+    # and append result dictionary
+    for key, value in distances.items():
+        if value == min_distance:
+            result[f"min distance - {key}"] = f"{value} km"
+
+    # final output
+    return {f"Country - {country.country_name}": result}
+
+
 #
 # @app.get("/api/three_nearest_cities")
 # def three_nearest_cities(country, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
