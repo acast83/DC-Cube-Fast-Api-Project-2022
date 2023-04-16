@@ -6,5 +6,4 @@ project.log
 __pycache__/
 dbs/
 logs/
-
-
+src/fastapi_src.egg-info/
