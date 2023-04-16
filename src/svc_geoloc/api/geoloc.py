@@ -124,7 +124,7 @@ def list_cities_by_population(min: int,
             }
 
 
-@app.get("/nearest_and_farthest_cities/{country_id}")
+@app.get("/countries/{country_id}/nearest_and_farthest_cities/")
 def nearest_and_farthest_cities(country_id,
                                 handler: object = Depends(get_auth_dependencies),
                                 db: Session = Depends(get_db)):
@@ -139,8 +139,8 @@ def nearest_and_farthest_cities(country_id,
     """
 
     # find country by a specific id input
-    country = db.query(DbCountry).filter(
-        DbCountry.id == country_id).first()
+    country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
+
     if not country:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="COUNTRY_NOT_FOUND")
     # create a dictionary with city pairs, and distances between them
@@ -167,7 +167,7 @@ def nearest_and_farthest_cities(country_id,
             result[f"min distance - {key}"] = f"{value} km"
 
     # final output
-    return {f"Country - {country.country_name}": result}
+    return {f"Country - {country.name}": result}
 
 
 # @app.get("/api/three_nearest_cities")
@@ -228,144 +228,105 @@ def nearest_and_farthest_cities(country_id,
 #         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
 #                             detail="Only alphabetic characters allowed")
 #
-#
-# @app.get("/nswe_cities/")
-# def nswe_cities(country_name_input, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     """
-#     Task C
-#     Function calculates northernmost, southernmost,
-#     easternmost and westernmost cities within a country
-#     based on country name input data.
-#     Input: function expects alphabetic input value.
-#     Example input: serbia
-#     Query is case insensitive
-#     Output: function returns a json formatted with northernmost, southernmost,
-#     easternmost and westernmost cities, and distance between them.
-#     """
-#     # input validation
-#     if country_name_input.isalpha():
-#
-#         # find specific country, and create a query object
-#         country_obj = db.query(CountryModel).filter(
-#             func.lower(CountryModel.country_name) ==
-#             func.lower(country_name_input)).first()
-#         if country_obj is None:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
-#         else:
-#             # create lists of lattitude and longitude from every city
-#             lat_list = [city.lat for city in country_obj.children]
-#             lng_list = [city.lng for city in country_obj.children]
-#
-#             # find northernmost,southernmost,easternmost and westernmost cities
-#             northernmost_city = country_obj.children[lat_list.index(
-#                 max(lat_list))]
-#             southernmost_city = country_obj.children[lat_list.index(
-#                 min(lat_list))]
-#             easternmost_city = country_obj.children[lng_list.index(
-#                 max(lng_list))]
-#             westernmost_city = country_obj.children[lng_list.index(
-#                 min(lng_list))]
-#
-#             # calculate distance between northernmost and southernmost cities
-#             north_south_distance = haversine(
-#                 (northernmost_city.lat, northernmost_city.lng),
-#                 (southernmost_city.lat, southernmost_city.lng))
-#
-#             # calculate distance between easternmost and westernmost cities
-#             east_west_distance = haversine(
-#                 (easternmost_city.lat, easternmost_city.lng),
-#                 (westernmost_city.lat, westernmost_city.lng))
-#
-#             return {f"Nothernmost city is {northernmost_city.city_ascii_name},"
-#                     f"southernmost city is {southernmost_city.city_ascii_name}."
-#                     f"Distance between them is ": f"{north_south_distance} km",
-#                     f"Westernmost city is {westernmost_city.city_ascii_name},"
-#                     f"easternmost city is {easternmost_city.city_ascii_name}."
-#                     f"Distance between them is ": f"{east_west_distance} km"
-#                     }
-#     else:
-#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-#                             detail="Only alphabetic characters allowed")
-#
-#
-# @app.get("/api/max_min_population/")
-# def ls_cities(value_set,
-#               token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     """
-#     Task D
-#     Function calculates max and min city population number based on
-#     the input set of country name values.
-#     Input: Function expects set of values, separated by a coma.
-#     Example input value: serbia,croatia.
-#     Query is case insensitive
-#     Output: Function returns a dictionary with city with lowest population
-#     number from the set o countries, city with largest population number
-#     the set of countries, and total population number for each country
-#     """
-#     # input validation
-#     if country_set_validator(value_set):
-#
-#         input_list = value_set.split(',')
-#
-#         # create a list of country query objects from elements of input list
-#         country_list = [db.query(CountryModel).filter(
-#             func.lower(CountryModel.country_name) == func.lower(country)).first()
-#                         for country in input_list]
-#
-#         if None in country_list:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail="One or more countries not found")
-#         else:
-#             # create a dictionary with a country name, city name and population
-#             city_dict = {}
-#             counter = 1
-#             for country in country_list:
-#                 for city in country.children:
-#                     city_dict[f"country - {country.country_name}, city -"
-#                               f"{city.city_ascii_name}"] = city.population
-#                 counter += 1
-#
-#             # calculate min city population
-#             min_population_city = min(
-#                 value for value in city_dict.values() if value is not None)
-#
-#             # create a dictionary with min population city name and it's population
-#             out_min = {}
-#             for key, value in city_dict.items():
-#                 if value == min_population_city:
-#                     out_min[key] = f"Population {value}"
-#
-#             # calculate max city population
-#             max_population_city = max(
-#                 value for value in city_dict.values() if value is not None)
-#
-#             # create a dictionary with max population city name and it's population
-#             out_max = {}
-#             for key, value in city_dict.items():
-#                 if value == max_population_city:
-#                     out_max[key] = f"Population {value}"
-#
-#             # calculate total population for each country
-#             total_population = {}
-#             counter = 1
-#             for country in country_list:
-#                 total_temp = 0
-#                 for city in country.children:
-#                     if city.population is not None:
-#                         total_temp += city.population
-#                 total_population[f"Country - {country.country_name}"] = \
-#                     f"Total population - {total_temp}"
-#
-#             return {"Smallest city from the set of countries": out_min,
-#                     "Largest city from the set of countries": out_max,
-#                     "Total population for each country": total_population}
-#
-#     else:
-#         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                             detail="Only alphabetic characters allowed,"
-#                                    "separated by a ','")
+
+@app.get("/countries/{country_id}/nswe_cities/")
+def nswe_cities(country_id: int,
+                # token: str = Depends(oauth2_scheme),
+                handler: object = Depends(get_auth_dependencies),
+                db: Session = Depends(get_db)):
+    """
+    Task C
+    Function calculates northernmost, southernmost,
+    easternmost and westernmost cities within a country
+    based on country name input data.
+    Input: function expects alphabetic input value.
+    Example input: serbia
+    Query is case insensitive
+    Output: function returns a json formatted with northernmost, southernmost,
+    easternmost and westernmost cities, and distance between them.
+    """
+
+    # find country by a specific id input
+    country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
+
+    if not country:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="COUNTRY_NOT_FOUND")
+    else:
+        # create lists of lattitude and longitude from every city
+        lat_list = [city.lat for city in country.cities]
+        lng_list = [city.lng for city in country.cities]
+
+        # find northernmost,southernmost,easternmost and westernmost cities
+        northernmost_city = country.cities[lat_list.index(
+            max(lat_list))]
+        southernmost_city = country.cities[lat_list.index(
+            min(lat_list))]
+        easternmost_city = country.cities[lng_list.index(
+            max(lng_list))]
+        westernmost_city = country.cities[lng_list.index(
+            min(lng_list))]
+
+        # calculate distance between northernmost and southernmost cities
+        north_south_distance = haversine(
+            (northernmost_city.lat, northernmost_city.lng),
+            (southernmost_city.lat, southernmost_city.lng))
+
+        # calculate distance between easternmost and westernmost cities
+        east_west_distance = haversine(
+            (easternmost_city.lat, easternmost_city.lng),
+            (westernmost_city.lat, westernmost_city.lng))
+
+        return {f"Nothernmost city is {northernmost_city.name},"
+                f"southernmost city is {southernmost_city.name}."
+                f"Distance between them is ": f"{north_south_distance} km",
+                f"Westernmost city is {westernmost_city.name},"
+                f"easternmost city is {easternmost_city.name}."
+                f"Distance between them is ": f"{east_west_distance} km"
+                }
+
+
+@app.get("/countries/{country_ids}/max_min_population/")
+def ls_cities(country_ids: str,
+              handler: object = Depends(get_auth_dependencies),
+              db: Session = Depends(get_db)):
+    """
+    Task D
+    Function calculates max and min city population number based on
+    the input set of country name values.
+    Input: Function expects set of values, separated by a coma.
+    Output: Function returns a dictionary with city with lowest population
+    number from the set o countries, city with largest population number
+    the set of countries, and total population number for each country
+    """
+
+    # Split the country_ids string on commas and convert the resulting list to integers
+    country_ids = [int(id) for id in country_ids.split(',')]
+
+    # Get a list of cities for the specified countries, ordered by population
+
+    cities = db.query(DbCity).join(DbCountry). \
+        filter(DbCountry.id.in_(country_ids)). \
+        order_by(DbCity.population).all()
+
+    # Get the city with the smallest population
+    smallest_city = cities[0]
+
+    # Get the city with the largest population
+    largest_city = cities[-1]
+
+    total_populations = db.query(DbCountry.name, func.sum(DbCity.population)). \
+        join(DbCity). \
+        filter(DbCountry.id.in_(country_ids)). \
+        group_by(DbCountry.id).all()
+
+    result = {"largest_city": {"name": largest_city.name, "population": largest_city.population},
+              "smallest_city": {"name": smallest_city.name, "population": smallest_city.population},
+              }
+    total_pop_res = {f"country {i}": {"name": c[0], "population": c[1]} for i, c in enumerate(total_populations)}
+
+    result.update({"total_population": total_pop_res})
+
+    return result
 
 
 if __name__ == "__main__":
