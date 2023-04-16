@@ -3,8 +3,8 @@ Python module used to import data from
 worldcities.csv file in a database
 """
 import pandas as pd
-from src.svc_geoloc.models.geoloc import DbCountry, DbCity
-from src.svc_geoloc.utils.db_utils import Session
+from svc_geoloc.models.geoloc import DbCountry, DbCity
+from svc_geoloc.utils.db_utils import Session
 from sqlalchemy import func
 
 

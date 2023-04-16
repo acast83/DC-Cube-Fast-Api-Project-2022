@@ -1,8 +1,8 @@
 from fastapi import status, HTTPException, Depends, Header
 from sqlalchemy.orm import Session
 import jwt
-from src.svc_users.models.users import User
-from src.svc_users.utils.db_utils import get_db
+from svc_users.models.users import User
+from svc_users.utils.db_utils import get_db
 import os
 
 JWT_SECRET = os.getenv("JWT_KEY")

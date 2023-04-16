@@ -2,17 +2,20 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import between
-from src.svc_geoloc.utils.logging_setup import log
-from src.svc_geoloc.utils.db_utils import get_db
+import os
+import pathlib
+import sys
+from svc_geoloc.utils.logging_setup import log
+from svc_geoloc.utils.db_utils import get_db
 from dotenv import load_dotenv
 import uvicorn
 from haversine import haversine
 
 load_dotenv()
-from src.utils.api_utils import get_auth_dependencies
+from utils.api_utils import get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
-from src.svc_geoloc.models.geoloc import *
+from svc_geoloc.models.geoloc import *
 from sqlalchemy import func
 
 app = FastAPI()
@@ -137,7 +140,6 @@ def nearest_and_farthest_cities(country_id,
     Output: function returns a dictionary with country name,
     nearest and farthest cities, and their distances
     """
-
     # find country by a specific id input
     country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
 

@@ -2,7 +2,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from pathlib import Path
 import os
-from src.svc_geoloc.models.geoloc import Base
+from svc_geoloc.models.geoloc import Base
 
 current_file_folder = os.path.dirname(os.path.realpath(__file__))
 db_path = f'{current_file_folder}/../../../dbs/geoloc.db'

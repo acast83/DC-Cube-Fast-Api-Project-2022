@@ -3,15 +3,15 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
 import jwt
-from src.svc_users.models.users import User
-from src.svc_users.utils.db_utils import get_db
-from src.svc_users.models.user_pydantic_models import PyUser
-from src.svc_users.utils.logging_setup import log
+from svc_users.models.users import User
+from svc_users.utils.db_utils import get_db
+from svc_users.models.user_pydantic_models import PyUser
+from svc_users.utils.logging_setup import log
 from dotenv import load_dotenv
 import uvicorn
 
 load_dotenv()
-from src.utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies
+from utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 app = FastAPI()
