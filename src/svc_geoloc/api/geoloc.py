@@ -2,9 +2,6 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import between
-import os
-import pathlib
-import sys
 from svc_geoloc.utils.logging_setup import log
 from svc_geoloc.utils.db_utils import get_db
 from dotenv import load_dotenv
