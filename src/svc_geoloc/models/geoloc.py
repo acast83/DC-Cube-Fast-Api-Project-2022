@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, declarative_base
 Base = declarative_base()
 
 
-class DbCountryModel(Base):
+class DbCountry(Base):
     """SQlalchemy model class used for table countries"""
     __tablename__ = "geoloc_countries"
     id = Column(Integer, primary_key=True)
@@ -23,4 +23,4 @@ class DbCity(Base):
     lng = Column(Integer, nullable=False)
     population = Column(Integer, nullable=True)
     country_id = Column(Integer, ForeignKey('geoloc_countries.id'))
-    country = relationship('DbCountryModel', backref='cities')
+    country = relationship('DbCountry', backref='cities')

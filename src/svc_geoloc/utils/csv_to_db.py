@@ -3,8 +3,8 @@ Python module used to import data from
 worldcities.csv file in a database
 """
 import pandas as pd
-from src.svc_users.models.users import CountryModel, CityModel
-from src.utils.db_utils import Session
+from src.svc_geoloc.models.geoloc import DbCountry, DbCity
+from src.svc_geoloc.utils.db_utils import Session
 from sqlalchemy import func
 
 
@@ -15,7 +15,7 @@ def add_country(name: str):
     """
     try:
         with Session() as session:
-            country = CountryModel(
+            country = DbCountry(
                 name=name
             )
             session.add(country)
@@ -34,8 +34,8 @@ def find_country(name):
     and store the data in a orm boject
     """
     with Session() as session:
-        country = session.query(CountryModel).filter(
-            func.lower(CountryModel.name) == func.lower(name)).first()
+        country = session.query(DbCountry).filter(
+            func.lower(DbCountry.name) == func.lower(name)).first()
     return country
 
 
@@ -46,7 +46,7 @@ def add_city(name, country_id, lat, lon, population):
     """
     try:
         with Session() as session:
-            city = CityModel(
+            city = DbCity(
                 name=name,
                 country_id=country_id,
                 lat=lat, lng=lon,

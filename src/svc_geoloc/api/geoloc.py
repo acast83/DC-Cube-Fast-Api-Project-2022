@@ -2,13 +2,15 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from src.svc_geoloc.utils.logging_setup import log
-from src.utils.logging_setup import log
+from src.svc_geoloc.utils.db_utils import get_db
 from dotenv import load_dotenv
 import uvicorn
 
 load_dotenv()
+from src.utils.api_utils import get_auth_dependencies
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
+from src.svc_geoloc.models.geoloc import *
 
 app = FastAPI()
 
@@ -21,38 +23,34 @@ def root():
     return {"service": "geoloc"}
 
 
-#
-#
-# @app.get("/api/list_countries/")
-# def list_of_countries(offset_val: int = Query(None, description="please enter offset value"),
-#                       limit_val: int = Query(None, description="Please enter limit value"), db: Session = Depends(get_db)):
-#     """
-#     api that provides user with json formated list of countries
-#     based on input limit and offset values.
-#     Input: limit and offset values used for pagination purpose
-#     Output: json formatted list of countries
-#     """
-#     if isinstance(offset_val, int) and isinstance(limit_val, int):
-#         try:
-#             # create country query object based on limit and offset  values
-#             countries_list = db.query(CountryModel).offset(
-#                 offset_val).limit(limit_val).all()
-#
-#             # create output dictionary
-#             dict_countries = {}
-#             for country in countries_list:
-#                 dict_countries[country.id] = country.country_name
-#
-#             return dict_countries
-#
-#         except Exception as exc:
-#             log.debug("Error", exc)
-#             return {"Error": exc}
-#     else:
-#         log.debug("User provides values that are not numeric")
-#         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                             detail="limit and offset values must be numeric values")
-#
+@app.get("/countries")
+def get_all_countries(
+        offset_val: int = 0,
+        limit_val: int = 20,
+        handler: object = Depends(get_auth_dependencies),
+        db: Session = Depends(get_db)
+):
+    """
+    api that provides user with json formated list of countries
+    based on input limit and offset values.
+    Input: limit and offset values used for pagination purpose
+    Output: json formatted list of countries
+    """
+
+    # create country query object based on limit and offset  values
+    try:
+        countries_list = db.query(DbCountry).offset(
+            offset_val).limit(limit_val).all()
+    except Exception as e:
+        raise
+    # create output list
+    result = []
+    for country in countries_list:
+        result.append({"id": country.id, "name": country.name})
+
+    return result
+
+
 #
 # @app.get("/api/find_country_by_city_name")
 # def find_country_by_city_name(city: str = Query(None, description="Please enter city name"), db: Session = Depends(get_db)):

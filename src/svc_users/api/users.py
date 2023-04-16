@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
 import jwt
 from src.svc_users.models.users import User
-from src.svc_users.utils.create_db import get_db
+from src.svc_users.utils.db_utils import get_db
 from src.svc_users.models.user_pydantic_models import PyUser
 from src.svc_users.utils.logging_setup import log
 from dotenv import load_dotenv
