@@ -170,64 +170,58 @@ def nearest_and_farthest_cities(country_id,
     return {f"Country - {country.name}": result}
 
 
-# @app.get("/api/three_nearest_cities")
-# def three_nearest_cities(country, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-#     """
-#     Task B
-#     Function calculates cluster of three nearest cities in a country.
-#     Input: country name, only alphabetic characters allowed.
-#     Query is case insensitive
-#     Output: function returns a dictionary with information about specific cluster
-#     """
-#     # input data validation
-#     if country_validator(country):
-#
-#         # find country by a specific id input
-#         country_obj = db.query(CountryModel).filter(
-#             func.lower(CountryModel.country_name) == func.lower(country)).first()
-#         if country_obj is None:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND, detail="Country not found")
-#
-#         else:
-#
-#             # create a dictionary with combination of three cities,
-#             #  and calculate distances between them
-#             distances = {}
-#             counter1 = 1
-#             for city1 in country_obj.children[:-2:]:
-#                 for city2 in country_obj.children[counter1:-1:]:
-#                     counter2 = counter1 + 1
-#                     for city3 in country_obj.children[counter2::]:
-#                         distances[f"{city1.city_ascii_name}-"
-#                                   f"{city2.city_ascii_name}-"
-#                                   f"{city3.city_ascii_name}"] \
-#                             = haversine((city1.lat, city1.lng), (city2.lat, city2.lng)) \
-#                               + haversine((city1.lat, city1.lng), (city3.lat, city3.lng)) \
-#                               + haversine((city2.lat, city2.lng),
-#                                           (city3.lat, city3.lng))
-#                         counter2 += 1
-#                     counter1 += 1
-#
-#             # calculate min distance
-#
-#             min_distance = min(distances.values())
-#
-#             # iterate through distance dict min values list, find key value,
-#             # and append result dictionary
-#
-#             result = {}
-#
-#             for key, value in distances.items():
-#                 if value == min_distance:
-#                     result[f"min distance - {key}"] = f"{value} km"
-#
-#             # final output
-#             return {f"Country - {country_obj.country_name}": result}
-#     else:
-#         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                             detail="Only alphabetic characters allowed")
-#
+@app.get("/countries/{country_id}/three_nearest_cities")
+def three_nearest_cities(country_id: int,
+                         handler: object = Depends(get_auth_dependencies),
+                         db: Session = Depends(get_db)):
+    """
+    Task B
+    Function calculates cluster of three nearest cities in a country.
+    Input: country name, only alphabetic characters allowed.
+    Query is case insensitive
+    Output: function returns a dictionary with information about specific cluster
+    """
+
+    # find country by a specific id input
+    country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
+    if not country:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="COUNTRY_NOT_FOUND")
+
+    # create a dictionary with combination of three cities,
+    #  and calculate distances between them
+    distances = {}
+    counter1 = 1
+    for city1 in country.cities[:-2:]:
+        for city2 in country.cities[counter1:-1:]:
+            counter2 = counter1 + 1
+            for city3 in country.cities[counter2::]:
+                distances[f"{city1.name}-"
+                          f"{city2.name}-"
+                          f"{city3.name}"] \
+                    = haversine((city1.lat, city1.lng), (city2.lat, city2.lng)) \
+                      + haversine((city1.lat, city1.lng), (city3.lat, city3.lng)) \
+                      + haversine((city2.lat, city2.lng),
+                                  (city3.lat, city3.lng))
+                counter2 += 1
+            counter1 += 1
+
+    # calculate min distance
+
+    min_distance = min(distances.values())
+
+    # iterate through distance dict min values list, find key value,
+    # and append result dictionary
+
+    result = {}
+
+    for key, value in distances.items():
+        if value == min_distance:
+            result[f"min distance - {key}"] = f"{value} km"
+
+    # final output
+    return {f"Country - {country.name}": result}
+
 
 @app.get("/countries/{country_id}/nswe_cities/")
 def nswe_cities(country_id: int,
@@ -319,10 +313,13 @@ def ls_cities(country_ids: str,
         filter(DbCountry.id.in_(country_ids)). \
         group_by(DbCountry.id).all()
 
-    result = {"largest_city": {"name": largest_city.name, "population": largest_city.population},
-              "smallest_city": {"name": smallest_city.name, "population": smallest_city.population},
+    result = {"largest_city": {"name": largest_city.name,
+                               "population": largest_city.population},
+              "smallest_city": {"name": smallest_city.name,
+                                "population": smallest_city.population},
               }
-    total_pop_res = {f"country {i}": {"name": c[0], "population": c[1]} for i, c in enumerate(total_populations)}
+    total_pop_res = {f"country {i}": {"name": c[0], "population": c[1]} \
+                     for i, c in enumerate(total_populations)}
 
     result.update({"total_population": total_pop_res})
 
