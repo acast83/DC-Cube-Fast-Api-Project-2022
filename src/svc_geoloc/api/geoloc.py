@@ -1,17 +1,15 @@
 from fastapi import FastAPI, status, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import between
 from dotenv import load_dotenv
 import uvicorn
 from haversine import haversine
 
-load_dotenv()
 from utils.api_utils import get_auth_dependencies
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 from svc_geoloc.models.geoloc import *
 from sqlalchemy import func
 
+load_dotenv()
 app = FastAPI()
 
 
