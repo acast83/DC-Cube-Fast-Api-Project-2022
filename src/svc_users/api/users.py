@@ -9,6 +9,7 @@ from svc_users.models.user_pydantic_models import PyUser
 from svc_users.utils.logging_setup import log
 from dotenv import load_dotenv
 import uvicorn
+import os
 
 load_dotenv()
 from utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies

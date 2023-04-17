@@ -1,0 +1,5 @@
+services:
+  users:
+    port: 8001
+  geoloc:
+    port: 8002

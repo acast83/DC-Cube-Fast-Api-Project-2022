@@ -4,6 +4,8 @@ from pathlib import Path
 import os
 from svc_users.models.users import Base
 
+
+
 current_file_folder = os.path.dirname(os.path.realpath(__file__))
 db_path = f'{current_file_folder}/../../../dbs/users.db'
 engine = create_engine("sqlite:///" + db_path)

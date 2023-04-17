@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, HTTPException, Depends
+from fastapi import FastAPI, status, HTTPException, Depends,Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import between
@@ -31,7 +31,7 @@ def get_all_countries(
         offset: int = 0,
         limit: int = 20,
         handler: object = Depends(get_auth_dependencies),
-        db: Session = Depends(get_db)
+        # db: Session = Depends(get_db)
 ):
     """
     api that provides user with json formated list of countries
@@ -39,6 +39,7 @@ def get_all_countries(
     Input: limit and offset values used for pagination purpose
     Output: json formatted list of countries
     """
+    db = handler.db
 
     # create country query object based on limit and offset  values
     countries = db.query(DbCountry).offset(
@@ -75,10 +76,11 @@ def find_country_by_city_name(city_name: str,
 
 
 @app.get("/cities")
-def get_cities(offset: int = 0,
+def get_cities( offset: int = 0,
                limit: int = 50,
                db: Session = Depends(get_db),
                handler: object = Depends(get_auth_dependencies),
+
                ):
     """
     Function provides user with list of cities

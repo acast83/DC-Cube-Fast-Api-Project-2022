@@ -1,6 +1,8 @@
 import subprocess
 import time
 import os
+from dotenv import load_dotenv
+load_dotenv()
 root_password=os.getenv("ROOT_PASS")
 
 for cmd in ("python src/svc_users/api/users.py", "python src/svc_geoloc/api/geoloc.py"):
@@ -8,7 +10,7 @@ for cmd in ("python src/svc_users/api/users.py", "python src/svc_geoloc/api/geol
 
 print("stopping nginx")
 os.system(f"echo {root_password} | sudo -S systemctl stop nginx")
-print("starting nginx")
+print("\nstarting nginx")
 os.system(f"echo {root_password} | sudo -S systemctl start nginx")
 
 while True:
