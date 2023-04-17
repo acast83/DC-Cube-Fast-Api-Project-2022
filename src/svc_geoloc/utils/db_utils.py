@@ -11,15 +11,6 @@ engine = create_engine("sqlite:///" + db_path)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
-def get_db():
-    db = Session()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 def create_db():
     """
     Function used to create a database

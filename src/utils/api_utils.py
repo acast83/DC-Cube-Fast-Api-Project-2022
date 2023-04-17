@@ -33,32 +33,21 @@ def check_token(request):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-
-
-
-# def get_token_dependency(token: str = Header(..., name="Authorization", alias="Authorization")):
-#     if not token:
-#         raise HTTPException(status_code=401, detail="Invalid token format")
-#     return token
-
-# async def get_request(request: Request):
-#     return request
-
-def get_database_dependency(db: Session = Depends(get_db)):
-    return db
-
-def get_auth_dependencies(request: Request,
-                          # db: Session = Depends(lambda req: get_db(Session=get_session_by_request(req)))
-                          ):
+def get_auth_dependencies(request: Request):
     token_data = check_token(request=request)
     log = get_logger(request=request)
+    session = get_session_by_request(request=request)
 
-    handler = type("Handler", (), {#"db": db,
+    handler = type("Handler", (), {"db": session,
                                    "id_user": token_data["id_user"],
                                    "request": request,
                                     "log":log
     })
-    return handler
+    try:
+        yield handler
+    finally:
+        session.close()
+
 
 
 

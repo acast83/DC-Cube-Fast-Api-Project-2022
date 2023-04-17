@@ -1,9 +1,6 @@
-from fastapi import FastAPI, status, HTTPException, Depends,Request
+from fastapi import FastAPI, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
 from sqlalchemy import between
-from svc_geoloc.utils.logging_setup import log
-from svc_geoloc.utils.db_utils import get_db
 from dotenv import load_dotenv
 import uvicorn
 from haversine import haversine
@@ -31,7 +28,7 @@ def get_all_countries(
         offset: int = 0,
         limit: int = 20,
         handler: object = Depends(get_auth_dependencies),
-        # db: Session = Depends(get_db)
+
 ):
     """
     api that provides user with json formated list of countries
@@ -55,7 +52,6 @@ def get_all_countries(
 
 @app.get("/country_by_city_name/{city_name}")
 def find_country_by_city_name(city_name: str,
-                              db: Session = Depends(get_db),
                               handler: object = Depends(get_auth_dependencies),
                               ):
     """
@@ -65,6 +61,7 @@ def find_country_by_city_name(city_name: str,
     Output: returns json formatted city and country data
     """
 
+    db = handler.db
     cities = db.query(DbCity).filter(
         func.lower(DbCity.name) == city_name.lower()
     ).all()
@@ -78,7 +75,6 @@ def find_country_by_city_name(city_name: str,
 @app.get("/cities")
 def get_cities( offset: int = 0,
                limit: int = 50,
-               db: Session = Depends(get_db),
                handler: object = Depends(get_auth_dependencies),
 
                ):
@@ -88,7 +84,7 @@ def get_cities( offset: int = 0,
     Input: limit and offset values used for pagination purposes
     Output: json formatted list of cities
     """
-
+    db = handler.db
     cities = db.query(DbCity).offset(
         offset).limit(limit).all()
 
@@ -104,7 +100,6 @@ def get_cities( offset: int = 0,
 def list_cities_by_population(min: int,
                               max: int,
                               limit: int = 50,
-                              db: Session = Depends(get_db),
                               handler: object = Depends(get_auth_dependencies),
                               ):
     """
@@ -113,7 +108,7 @@ def list_cities_by_population(min: int,
     Input: min and max population
     Output: returns sa json formatted with city names and their population
     """
-
+    db = handler.db
     cities = db.query(DbCity).filter(
         between(DbCity.population, min, max)
     ).all()
@@ -129,7 +124,7 @@ def list_cities_by_population(min: int,
 @app.get("/countries/{country_id}/nearest_and_farthest_cities/")
 def nearest_and_farthest_cities(country_id,
                                 handler: object = Depends(get_auth_dependencies),
-                                db: Session = Depends(get_db)):
+                                ):
     """
     Task A
     Function calculates min and max distances between two cities within a country,
@@ -139,6 +134,9 @@ def nearest_and_farthest_cities(country_id,
     Output: function returns a dictionary with country name,
     nearest and farthest cities, and their distances
     """
+
+    db = handler.db
+
     # find country by a specific id input
     country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
 
@@ -174,7 +172,7 @@ def nearest_and_farthest_cities(country_id,
 @app.get("/countries/{country_id}/three_nearest_cities")
 def three_nearest_cities(country_id: int,
                          handler: object = Depends(get_auth_dependencies),
-                         db: Session = Depends(get_db)):
+                         ):
     """
     Task B
     Function calculates cluster of three nearest cities in a country.
@@ -182,7 +180,7 @@ def three_nearest_cities(country_id: int,
     Query is case insensitive
     Output: function returns a dictionary with information about specific cluster
     """
-
+    db = handler.db
     # find country by a specific id input
     country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
     if not country:
@@ -226,9 +224,9 @@ def three_nearest_cities(country_id: int,
 
 @app.get("/countries/{country_id}/nswe_cities/")
 def nswe_cities(country_id: int,
-                # token: str = Depends(oauth2_scheme),
+
                 handler: object = Depends(get_auth_dependencies),
-                db: Session = Depends(get_db)):
+               ):
     """
     Task C
     Function calculates northernmost, southernmost,
@@ -241,6 +239,7 @@ def nswe_cities(country_id: int,
     easternmost and westernmost cities, and distance between them.
     """
 
+    db = handler.db
     # find country by a specific id input
     country = db.query(DbCountry).filter_by(id=country_id).one_or_none()
 
@@ -283,7 +282,7 @@ def nswe_cities(country_id: int,
 @app.get("/countries/{country_ids}/max_min_population/")
 def ls_cities(country_ids: str,
               handler: object = Depends(get_auth_dependencies),
-              db: Session = Depends(get_db)):
+             ):
     """
     Task D
     Function calculates max and min city population number based on
@@ -293,6 +292,7 @@ def ls_cities(country_ids: str,
     number from the set o countries, city with largest population number
     the set of countries, and total population number for each country
     """
+    db = handler.db
 
     # Split the country_ids string on commas and convert the resulting list to integers
     country_ids = [int(id) for id in country_ids.split(',')]

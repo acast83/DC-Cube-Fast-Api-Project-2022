@@ -7,14 +7,13 @@ current_file_folder = os.path.dirname(os.path.realpath(__file__))
 
 def load_conf():
     # Open the YAML file and read its contents
-    configuration_path = pathlib.Path(current_file_folder+"/../configuration/services.yaml").resolve()
+    configuration_path = pathlib.Path(current_file_folder+"/../config/services.yaml").resolve()
     with open(configuration_path, "r") as f:
         data = f.read()
 
     # Parse the YAML data into a Python object
     config = yaml.safe_load(data)
     return config
-    ...
 
 
 def get_service_name(port):

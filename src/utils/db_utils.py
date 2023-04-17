@@ -7,23 +7,11 @@ import os
 from svc_users.models.users import Base
 from utils.config_utils import get_service_name
 from fastapi import HTTPException
-from functools import partial
 
 current_file_folder = os.path.dirname(os.path.realpath(__file__))
 
-# Create a new function with the Session argument bound to the Session object
-#
-# def get_session_by_request(request):
-#
-#     base_url_port = request.base_url.port
-#     service_name = get_service_name(base_url_port)
-#     db_path = f'{current_file_folder}/../../dbs/{service_name}.db'
-#     engine = create_engine("sqlite:///" + db_path)
-#
-#     Session = sessionmaker(bind=engine)
-#     return Session
 
-def get_session_by_request(request: Request):
+def get_session_by_request(request):
     base_url_port = request.base_url.port
     service_name = get_service_name(base_url_port)
     db_path = f'{current_file_folder}/../../dbs/{service_name}.db'
