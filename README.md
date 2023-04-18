@@ -1,11 +1,6 @@
-### DC FastApi Backend Project
+### DC Cube Geoloc Assignment Backend Project
 
-DC FastApi Project is as part of a Digital Cube's technical interview.
-Application is live on Heroku:
-https://digital-cube-fastapi.herokuapp.com/
-Swagger UI:
-https://digital-cube-fastapi.herokuapp.com/docs
-
+DC Cube geoloc assignment is as part of a Digital Cube's technical interview.
 ---
 
 ## Getting Started
@@ -13,7 +8,7 @@ https://digital-cube-fastapi.herokuapp.com/docs
 ### Requirements
 docker engine, docker-compose, git
 
-### Installation: 
+### Installation(deprecated, will be updated): 
 
 Create project folder and get inside the project folder
 
