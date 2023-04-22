@@ -12,7 +12,7 @@ import uvicorn
 import os
 
 load_dotenv()
-from utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies
+from utils.api_utils import JWT_SECRET, ALGORITHM, get_auth_dependencies, get_non_auth_dependencies, Handler
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/login')
 app = FastAPI()
@@ -27,14 +27,14 @@ def root():
 
 
 @app.post("/sign_up")
-def create_new_user(user: PyUser, db: Session = Depends(get_db)):
+def create_new_user(user: PyUser, handler: Handler = Depends(get_non_auth_dependencies)):
     """
     Function used for registering new user.
     Input: allowed only alphanumeric characters
     and special characters (_ and -).
     Output: funtions returns json with new user's token
     """
-
+    db = handler.db
     # search user table for existing username
     existing_user = db.query(User).filter_by(
         username=user.username).one_or_none()
@@ -66,12 +66,13 @@ def create_new_user(user: PyUser, db: Session = Depends(get_db)):
 
 
 @app.post("/login")
-def login(user: PyUser, db: Session = Depends(get_db)):
+def login(user: PyUser, handler: Handler = Depends(get_non_auth_dependencies)):
     """
     Function used for user login.
     Input: user provides username and password
     Output: if user exists, function returns json with user's token
     """
+    db = handler.db
 
     # find user based on input username value
     db_user = db.query(User).filter_by(
@@ -94,7 +95,7 @@ def login(user: PyUser, db: Session = Depends(get_db)):
 
 
 @app.get("/protected")
-async def protected_route(handler: object = Depends(get_auth_dependencies)):
+async def protected_route(handler: Handler = Depends(get_auth_dependencies)):
     db = handler.db
 
     return {"success": "yeah"}
