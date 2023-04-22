@@ -36,7 +36,7 @@ def get_all_countries(
     """
     db = handler.db
 
-    # create country query object based on limit and offset  values
+    # create country query object based on limit and offset values
     countries = db.query(DbCountry).offset(
         offset).limit(limit).all()
 
@@ -71,7 +71,7 @@ def find_country_by_city_name(city_name: str,
 
 
 @app.get("/cities")
-def get_cities( offset: int = 0,
+def get_cities(offset: int = 0,
                limit: int = 50,
                handler: object = Depends(get_auth_dependencies),
 
@@ -224,7 +224,7 @@ def three_nearest_cities(country_id: int,
 def nswe_cities(country_id: int,
 
                 handler: object = Depends(get_auth_dependencies),
-               ):
+                ):
     """
     Task C
     Function calculates northernmost, southernmost,
@@ -280,7 +280,7 @@ def nswe_cities(country_id: int,
 @app.get("/countries/{country_ids}/max_min_population/")
 def ls_cities(country_ids: str,
               handler: object = Depends(get_auth_dependencies),
-             ):
+              ):
     """
     Task D
     Function calculates max and min city population number based on
