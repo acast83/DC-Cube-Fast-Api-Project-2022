@@ -12,7 +12,7 @@ current_file_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 def get_session_by_request(request):
-    base_url_port = request.base_url.port
+    base_url_port = request.scope["server"][-1]
     service_name = get_service_name(base_url_port)
     db_path = f'{current_file_folder}/../../dbs/{service_name}.db'
     engine = create_engine("sqlite:///" + db_path)
@@ -26,6 +26,7 @@ def get_session_by_svc_name(service_name):
     engine = create_engine("sqlite:///" + db_path)
     Session = sessionmaker(bind=engine)
     return Session()
+
 
 def get_db(Session):
     db = Session()

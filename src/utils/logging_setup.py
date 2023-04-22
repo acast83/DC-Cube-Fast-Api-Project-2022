@@ -7,11 +7,12 @@ import pathlib
 
 from utils.config_utils import get_service_name
 
-def get_logger(request=None,service_name:str=None):
+
+def get_logger(request=None, service_name: str = None):
     if not request and not service_name or (request and service_name):
         raise
     if not service_name:
-        service_name = get_service_name(request.base_url.port)
+        service_name = get_service_name(port=request.scope["server"][-1])
     # Setting a logger
     log = logging.getLogger(__name__)
     log.setLevel(logging.DEBUG)
